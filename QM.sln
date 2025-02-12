@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35728.132
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QM", "QM\QM.csproj", "{A2A113F4-68ED-4C8F-BF6F-4D644814B64D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NcForm", "..\CustomForm\NcForm\NcForm.csproj", "{16D961EF-3A47-445C-B598-A1C2166454BD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CfgReaderLib", "..\Fred68\CfgReader.NET\CfgReaderLib\CfgReaderLib.csproj", "{C74206F7-B0B5-4BB0-A788-1FB9796E9ADB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A2A113F4-68ED-4C8F-BF6F-4D644814B64D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2A113F4-68ED-4C8F-BF6F-4D644814B64D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2A113F4-68ED-4C8F-BF6F-4D644814B64D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2A113F4-68ED-4C8F-BF6F-4D644814B64D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16D961EF-3A47-445C-B598-A1C2166454BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16D961EF-3A47-445C-B598-A1C2166454BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16D961EF-3A47-445C-B598-A1C2166454BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16D961EF-3A47-445C-B598-A1C2166454BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C74206F7-B0B5-4BB0-A788-1FB9796E9ADB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C74206F7-B0B5-4BB0-A788-1FB9796E9ADB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C74206F7-B0B5-4BB0-A788-1FB9796E9ADB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C74206F7-B0B5-4BB0-A788-1FB9796E9ADB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
