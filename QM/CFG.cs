@@ -13,6 +13,9 @@ namespace QM
 		public float Opacity;
 		public string Titolo;
 		public string Comandi;
+		public string Sep;
+		public string MnuIni;
+		public string MnuFin;
 	}
 
 

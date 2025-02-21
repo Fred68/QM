@@ -7,7 +7,7 @@ namespace QM
     internal static class Program
     {
         public readonly static string _cfgFile = "QM.cfg";
-        static CFG cfg;
+        static CFG? cfg;
 
 
         /// <summary>

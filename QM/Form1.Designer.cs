@@ -47,7 +47,7 @@
 			menu.LayoutStyle = ToolStripLayoutStyle.VerticalStackWithOverflow;
 			menu.Location = new Point(9,25);
 			menu.Name = "menu";
-			menu.Size = new Size(126,82);
+			menu.Size = new Size(55,63);
 			menu.TabIndex = 3;
 			menu.Text = "menuStrip1";
 			// 
@@ -55,7 +55,7 @@
 			// 
 			sadsdToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { ssssToolStripMenuItem,sssToolStripMenuItem,cccToolStripMenuItem });
 			sadsdToolStripMenuItem.Name = "sadsdToolStripMenuItem";
-			sadsdToolStripMenuItem.Size = new Size(119,19);
+			sadsdToolStripMenuItem.Size = new Size(48,19);
 			sadsdToolStripMenuItem.Text = "sadsd";
 			// 
 			// ssssToolStripMenuItem
@@ -92,20 +92,20 @@
 			// ccccToolStripMenuItem
 			// 
 			ccccToolStripMenuItem.Name = "ccccToolStripMenuItem";
-			ccccToolStripMenuItem.Size = new Size(119,19);
+			ccccToolStripMenuItem.Size = new Size(48,19);
 			ccccToolStripMenuItem.Text = "cccc";
 			// 
 			// dddToolStripMenuItem
 			// 
 			dddToolStripMenuItem.Name = "dddToolStripMenuItem";
-			dddToolStripMenuItem.Size = new Size(119,19);
+			dddToolStripMenuItem.Size = new Size(48,19);
 			dddToolStripMenuItem.Text = "ddd";
 			// 
 			// Form1
 			// 
 			AutoScaleDimensions = new SizeF(7F,15F);
 			AutoScaleMode = AutoScaleMode.Font;
-			ClientSize = new Size(269,247);
+			ClientSize = new Size(185,247);
 			Controls.Add(menu);
 			MainMenuStrip = menu;
 			Name = "Form1";
