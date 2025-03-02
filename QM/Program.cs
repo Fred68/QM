@@ -30,24 +30,33 @@ namespace QM
                 MessageBox.Show(cfg.Message);
                 return;
             }
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
-            //Application.Run(new Form1());
 
             NcForms.NcFormStyle ncfs = new NcForms.NcFormStyle(
-                                                    NcForms.NcWindowsStyles.TopMost
-                                                    //| NcForms.NcWindowsStyles.MinMax
-                                                    | NcForms.NcWindowsStyles.Help
-                                                    //| NcForms.NcWindowsStyles.LowerBar
-                                                    //| NcForms.NcWindowsStyles.Menu
-                                                    //| NcForms.NcWindowsStyles.Resizable
-                                                    ,
-                                                    
-                                                    NcForms.NcFormWindowStates.Normal
-                                                    );
-
-            Application.Run(new Form1(/*NcForms.NcFormStyle.Normal*/ncfs, new NcForms.NcFormColor(Color.LightCyan,Color.PowderBlue,Color.LightCyan,Color.LightCyan,0.5f), cfg /*NcForms.NcFormColor.Simple*/));
+                NcForms.NcWindowsStyles.TopMost
+                //| NcForms.NcWindowsStyles.MinMax
+                | NcForms.NcWindowsStyles.Help
+                //| NcForms.NcWindowsStyles.LowerBar
+                //| NcForms.NcWindowsStyles.Menu
+                //| NcForms.NcWindowsStyles.Resizable
+                ,
+                NcForms.NcFormWindowStates.Normal
+                );
+            Color[] color = new Color[4];
+            color[0] = Color.FromName(cfg.COL_bkgnd);
+            color[1] = Color.FromName(cfg.COL_title);
+            color[2] = Color.FromName(cfg.COL_status);
+            color[3] = Color.FromName(cfg.COL_buttons);
+            for(int i=0; i<color.Length; i++)
+            {
+                if(!color[i].IsKnownColor)
+                {
+                MessageBox.Show($"{color[i].Name} is not a valid colour");
+                color[i] = Color.White;
+                }
+            }
+            
+            Application.Run(new Form1(ncfs, new NcForms.NcFormColor(color[0],color[1],color[2],color[3],1f), cfg));
         }
     }
 }

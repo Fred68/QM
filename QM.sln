@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NcForm", "..\CustomForm\NcF
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CfgReaderLib", "..\Fred68\CfgReader.NET\CfgReaderLib\CfgReaderLib.csproj", "{C74206F7-B0B5-4BB0-A788-1FB9796E9ADB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tree", "..\Fred68\Tree\Tree\Tree.csproj", "{13C3BC5C-EFAF-4FB8-89A6-5FE1DA079184}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{C74206F7-B0B5-4BB0-A788-1FB9796E9ADB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C74206F7-B0B5-4BB0-A788-1FB9796E9ADB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C74206F7-B0B5-4BB0-A788-1FB9796E9ADB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{13C3BC5C-EFAF-4FB8-89A6-5FE1DA079184}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13C3BC5C-EFAF-4FB8-89A6-5FE1DA079184}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13C3BC5C-EFAF-4FB8-89A6-5FE1DA079184}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13C3BC5C-EFAF-4FB8-89A6-5FE1DA079184}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

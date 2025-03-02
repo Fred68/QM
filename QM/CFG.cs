@@ -16,6 +16,12 @@ namespace QM
 		public string Sep;
 		public string MnuIni;
 		public string MnuFin;
+
+		public string COL_bkgnd;
+		public string COL_title;
+		public string COL_status;
+		public string COL_buttons;
+		
 	}
 
 
