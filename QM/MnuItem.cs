@@ -13,6 +13,7 @@ namespace QM
 		uint _id;
 		string _txt;
 		string _command;
+		ToolStripMenuItem? _tsmi;
 
 		/// <summary>
 		/// Item text
@@ -28,7 +29,13 @@ namespace QM
 		/// Id
 		/// </summary>
 		public uint ID { get {return _id;} set {_id = value;} }
-				
+		
+		/// <summary>
+		/// ToolStripMenuItem
+		/// </summary>
+		
+		public ToolStripMenuItem Tsmi  { get {return _tsmi;} set {_tsmi = value;} }
+
 		/// <summary>
 		/// CTOR
 		/// </summary>
@@ -40,6 +47,7 @@ namespace QM
 			_id = ID;
 			_txt = (txt != null) ? txt : ((ID == 0) ? "root" : string.Empty);
 			_command = (command != null) ? command : string.Empty;
+			_tsmi = null;
 		}
 
 		/// <summary>

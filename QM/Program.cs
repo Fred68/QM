@@ -20,9 +20,6 @@ namespace QM
             cfg = new CFG();
             cfg.CHR_ListSeparator = @";";
 			cfg.ReadConfiguration(_cfgFile);
-
-            //MessageBox.Show(cfg.Message);
-
             cfg.GetNames(true);
 
             if(!cfg.IsOk)
@@ -30,6 +27,7 @@ namespace QM
                 MessageBox.Show(cfg.Message);
                 return;
             }
+
             ApplicationConfiguration.Initialize();
 
             NcForms.NcFormStyle ncfs = new NcForms.NcFormStyle(
