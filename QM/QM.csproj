@@ -43,6 +43,9 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Update="QCom2.cfg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="QCom.cfg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

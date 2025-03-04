@@ -10,9 +10,10 @@ namespace QM
 	public class CFG : CfgReader
 	{
 		public bool FastQuit;
+		public bool Verbose;
 		public float Opacity;
 		public string Titolo;
-		public string Comandi;
+		public List<string> Comandi;
 		public string Sep;
 		public string MnuIni;
 		public string MnuFin;

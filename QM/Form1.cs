@@ -6,6 +6,7 @@ using Fred68.TreeItem;
 using Tree;
 using Microsoft.VisualBasic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace QM
 {
@@ -20,7 +21,7 @@ namespace QM
 
 		List<string>? linee;				// Linee con i comandi
 		TreeItem<MnuItem>? menuTree;		// Albero con i comandi
-		string[]? comandi;					// Array dei comandi
+		string[][]? comandi;				// Array degli array (jagged) dei comandi
 
 		/// <summary>
 		/// CTOR con parametri
@@ -35,7 +36,8 @@ namespace QM
 			this.AskClose = !cfg.FastQuit;
 			this.Opacity = cfg.Opacity;
 			this.Title = cfg.Titolo;
-			
+			this.StatusText = string.Empty;
+			comandi = new string[cfg.Comandi.Count][];
 		}
 
 		/// <summary>
@@ -45,33 +47,69 @@ namespace QM
 		/// <param name="e"></param>
 		private void Form1_Load(object sender,EventArgs e)
 		{
+			//uint commandCount;
+
+			menu.AutoSize = true;
+
+			menu.Location = new Point(0,this.UpperBarHeight);
+			menu.Items.Clear();
+			menu.BackColor = Color.FromName(cfg.COL_bkgnd);
+
+			menu.SuspendLayout();
+			SuspendLayout();
+			
+			ReadAndSetupMenu();
+
+			ResumeLayout(true);
+			menu.ResumeLayout(true);
+
+			Size mnuSz = menu.Size;
+			Size formSz = this.Size;
+
+			formSz.Width = mnuSz.Width;
+			formSz.Height = mnuSz.Height + this.UpperBarHeight + this.LowerBarHeight;
+			this.Size = formSz;
+			
+		}
+
+		void ReadAndSetupMenu(int iMenu = 0)
+		{
 			uint commandCount;
+			
+			bool isFirstEmptySet = false;
+
 			linee = ReadMenuFile();
 			menuTree = LinesToTree(linee, out commandCount);
-			comandi = new string[commandCount+1];
+			comandi[iMenu] = new string[commandCount+1];
 
-			#if DEBUG
-			ShowLines();
-			ShowTree();
-			#endif
+			if(cfg.Verbose)
+			{
+				ShowLines();
+				ShowTree();
+			}
 
 			linee.Clear();
 			linee = null;					// Ready to dispose by GC
 
-			menu.Location = new Point(0,this.UpperBarHeight);
-			menu.Items.Clear();
 			if(menuTree != null)
 			{
+				//menu.Items.Add(new ToolStripMenuItem(cfg.Comandi, null));
 				foreach(TreeItem<MnuItem> item in menuTree.TreeItems(TreeSearchType.depth_first))
 				{
 					item.Data.Tsmi = new ToolStripMenuItem(item.Data.Txt, null);
 					item.Data.Tsmi.TextAlign = ContentAlignment.MiddleLeft;
 					item.Data.Tsmi.Name = $"{item.Data.ID.ToString($"D{IDLEN}")}";
-					
-					if(item.Data.Command.Length > 1)
+					item.Data.Tsmi.BackColor = Color.FromName(cfg.COL_bkgnd);
+
+					if(item.Data.Command.Length > 1)				// Add command handler
 					{
 						item.Data.Tsmi.Click += TsmiOnClick;
-						comandi[item.Data.ID] = item.Data.Command;
+						comandi[iMenu][item.Data.ID] = item.Data.Command;
+					}
+					else if((!isFirstEmptySet) && (!item.IsRoot))		// Add change menu handler (first item, not root)
+					{
+						item.Data.Tsmi.Click += menuTitleOnClick;
+						isFirstEmptySet = true;
 					}
 
 					if(item.Depth == 1)
@@ -86,12 +124,20 @@ namespace QM
 						}
 					}
 				}
+				menuTree.Clear();
 			}
-
-			menu.ResumeLayout(true);
-			
 		}
 
+		void menuTitleOnClick(object? sender, EventArgs e)
+		{
+			NcMessageBox.Show(this, "CLICK !!!","Change menu");	
+		}
+
+		/// <summary>
+		/// Menu item click handler
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="e"></param>
 		void TsmiOnClick(object? sender, EventArgs e)
 		{
 			uint id;
@@ -102,43 +148,55 @@ namespace QM
 				{
 					if(uint.TryParse(((ToolStripMenuItem)sender).Name, out id))
 					{
-						NcMessageBox.Show(this,comandi[id]);
-						try
+						bool ok = true;
+						if(cfg.Verbose)
 						{
-							//System.Diagnostics.Process.Start(comandi[id]);
-
-							ProcessStartInfo psinfo= new ProcessStartInfo();
-							psinfo.FileName = comandi[id];
-							psinfo.UseShellExecute = true;
-							
-							Process proc = new Process();
-							proc.StartInfo = psinfo;
-							proc.EnableRaisingEvents = true;
-							proc.Start();
-
+							#warning METTERE ...comandi[iMenu][id]...
+							if(NcMessageBox.Show(this,comandi[0][id],"Execute ?",MessageBoxButtons.YesNo) != DialogResult.Yes)
+							{
+								ok = false;
+							}
 						}
-						catch(Exception ex)
+						if(ok)
 						{
-							NcMessageBox.Show(this,ex.Message);
+							try
+							{
+								// System.Diagnostics.Process.Start(comandi[id]) forse non funziona correttamente con .NET 8.0
+
+								ProcessStartInfo psinfo= new ProcessStartInfo();
+								psinfo.FileName = comandi[0][id];
+								psinfo.UseShellExecute = true;
+							
+								Process proc = new Process();
+								proc.StartInfo = psinfo;
+								proc.EnableRaisingEvents = true;
+								proc.Start();
+
+							}
+							catch(Exception ex)
+							{
+								NcMessageBox.Show(this,ex.Message);
+							}
 						}
 					}
 
 				}
 			}
 		}
+
 		/// <summary>
 		///  Legge il file con il menu
 		///  Rimuove i commenti, scarta le linee non valide e numera le linee
 		/// </summary>
 		/// <returns>List<string> linee lette</returns>
-		List<string> ReadMenuFile()
+		List<string> ReadMenuFile(int iMenu = 0)
 		{
 			List<string> lines = new List<string>();
 			try
 			{
 				int nItem = 1;		// Valid items count, starting from 1, number 0 is for the root. 
 				string? line;
-				StreamReader sr = new StreamReader(cfg.Comandi);
+				StreamReader sr = new StreamReader(cfg.Comandi[iMenu]);
 				while ((line = sr.ReadLine()) != null)
 				{
 					if( (line.Length > 0) && (!line.StartsWith(cfg.CHR_Commento)))		// Line is noot empty or is a comment
@@ -284,7 +342,7 @@ namespace QM
 					sb.AppendLine(linee[il]);
 				}
 			}
-			NcMessageBox.Show(this, sb.ToString());
+			NcMessageBox.Show(this, sb.ToString(),"Lines");
 		}
 
 		/// <summary>
@@ -294,13 +352,9 @@ namespace QM
 		{
 			if(menuTree != null)
 			{
-				NcMessageBox.Show(this, menuTree.ToTreeString());
+				NcMessageBox.Show(this, menuTree.ToTreeString(),"Menu tree");
 			}
 		}
 
-		void Legge(ToolStripMenuItem tsmi)
-		{
-
-		}
 	}
 }

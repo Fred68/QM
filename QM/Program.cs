@@ -19,8 +19,16 @@ namespace QM
 
             cfg = new CFG();
             cfg.CHR_ListSeparator = @";";
-			cfg.ReadConfiguration(_cfgFile);
-            cfg.GetNames(true);
+            try
+            {
+			    cfg.ReadConfiguration(_cfgFile);
+                cfg.GetNames(true);
+            }
+            catch
+            {
+                MessageBox.Show("Error reading configuration file:" + Environment.NewLine + cfg.Message);
+                return;
+            }
 
             if(!cfg.IsOk)
             {
@@ -36,7 +44,7 @@ namespace QM
                 | NcForms.NcWindowsStyles.Help
                 //| NcForms.NcWindowsStyles.LowerBar
                 //| NcForms.NcWindowsStyles.Menu
-                //| NcForms.NcWindowsStyles.Resizable
+                | NcForms.NcWindowsStyles.Resizable
                 ,
                 NcForms.NcFormWindowStates.Normal
                 );
