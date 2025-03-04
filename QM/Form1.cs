@@ -5,6 +5,7 @@ using System.Text;
 using Fred68.TreeItem;
 using Tree;
 using Microsoft.VisualBasic;
+using System.Diagnostics;
 
 namespace QM
 {
@@ -101,11 +102,25 @@ namespace QM
 				{
 					if(uint.TryParse(((ToolStripMenuItem)sender).Name, out id))
 					{
-						#if DEBUG
 						NcMessageBox.Show(this,comandi[id]);
-						#else
-						System.Diagnostics.Process.Start(comandi[id]);
-						#endif
+						try
+						{
+							//System.Diagnostics.Process.Start(comandi[id]);
+
+							ProcessStartInfo psinfo= new ProcessStartInfo();
+							psinfo.FileName = comandi[id];
+							psinfo.UseShellExecute = true;
+							
+							Process proc = new Process();
+							proc.StartInfo = psinfo;
+							proc.EnableRaisingEvents = true;
+							proc.Start();
+
+						}
+						catch(Exception ex)
+						{
+							NcMessageBox.Show(this,ex.Message);
+						}
 					}
 
 				}
