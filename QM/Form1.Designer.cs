@@ -110,7 +110,10 @@
 			MainMenuStrip = menu;
 			Name = "Form1";
 			Text = "Form1";
+			Activated += Form1_ChangeActivation;
+			Deactivate += Form1_ChangeActivation;
 			Load += Form1_Load;
+			Resize += Form1_Resize;
 			Controls.SetChildIndex(menu,0);
 			menu.ResumeLayout(false);
 			menu.PerformLayout();

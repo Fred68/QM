@@ -1,12 +1,9 @@
 using NcForms;
-using static System.Windows.Forms.LinkLabel;
-using System.ComponentModel.Design;
 using System.Text;
 using Fred68.TreeItem;
 using Tree;
-using Microsoft.VisualBasic;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
+//using System.Windows.Forms.VisualStyles;
 
 namespace QM
 {
@@ -14,17 +11,19 @@ namespace QM
 	/// <summary>
 	/// Main form, derivato da NcForm
 	/// </summary>
-	public partial class Form1 : NcForms.NcForm
+	public partial class Form1:NcForms.NcForm
 	{
-		const int IDLEN = 4;				// Numero di caratteri dell'item
-		CFG cfg;							// File di configurazione
+		const int IDLEN = 4;                // Numero di caratteri dell'item
+		CFG cfg;                            // File di configurazione
 
-		List<string>? linee;				// Linee con i comandi
-		TreeItem<MnuItem>? menuTree;		// Albero con i comandi
-		MenuStrip[] menus;					// I menù caricati
-		string[]?[] comandi;				// Array degli array (jagged) dei comandi
+		List<string>? linee;                // Linee con i comandi
+		TreeItem<MnuItem>? menuTree;        // Albero con i comandi
+		MenuStrip[] menus;                  // I menù caricati
+		string[]?[] comandi;                // Array degli array (jagged) dei comandi
 
-		int iMenu;							// Indice del menù corrente
+		int iMenu;                          // Indice del menù corrente
+
+		bool quitWhenActivated;
 
 		/// <summary>
 		/// CTOR con parametri
@@ -32,7 +31,7 @@ namespace QM
 		/// <param name="style"></param>
 		/// <param name="color"></param>
 		/// <param name="cfg"></param>
-		public Form1(NcFormStyle style,NcFormColor color, CFG cfg) : base(style,color)
+		public Form1(NcFormStyle style,NcFormColor color,CFG cfg) : base(style,color)
 		{
 			InitializeComponent();
 			this.cfg = cfg;
@@ -42,6 +41,7 @@ namespace QM
 			this.StatusText = string.Empty;
 			comandi = new string[cfg.Comandi.Count][];
 			menus = new MenuStrip[cfg.Comandi.Count];
+			quitWhenActivated = false;
 		}
 
 		/// <summary>
@@ -53,39 +53,45 @@ namespace QM
 		{
 			iMenu = 0;
 
-			SetupMenus();
-			
-			for(int i=0; i< cfg.Comandi.Count; i++)
+			menu.Hide();
+
+			if(!SetupMenus())
+			{
+				NcMessageBox.Show(this,"Errore in uno dei menu. Fine programma.");
+				
+				quitWhenActivated = true;					// Force Close() as soon as possible, but not when loading (it generates an error)
+			}
+
+			for(int i = 0;i < cfg.Comandi.Count;i++)
 			{
 				Controls.Add(menus[i]);
+				SetupControlEvents(menus[i]);				// Set MouseEnter/Leave base class event handler to new controls...
 				menus[i].Hide();
 			}
+
+			SetLayout(menu);
+		}
+
+		void SetLayout(MenuStrip? mnu = null)
+		{
 			SuspendLayout();
-			
-			//menu = menus[iMenu];
-			
-			//menu.Dock = DockStyle.None;
-			//menu.LayoutStyle = ToolStripLayoutStyle.VerticalStackWithOverflow;
-			//menu.Location = new Point(0,this.UpperBarHeight);
-			//menu.AutoSize = true;
-			
-			//Controls.Add(menu);
-			MainMenuStrip = menu;
-			
-			menu.Hide();
-			//menus[0].Show();
-			MainMenuStrip = menus[0];
+
+			if(mnu != null)
+			{
+				MainMenuStrip = mnu;
+			}
+
+			MainMenuStrip.Hide();
+
+			MainMenuStrip = menus[iMenu];
 
 			MainMenuStrip.Dock = DockStyle.None;
 			MainMenuStrip.LayoutStyle = ToolStripLayoutStyle.VerticalStackWithOverflow;
 			MainMenuStrip.Location = new Point(0,this.UpperBarHeight);
 			MainMenuStrip.AutoSize = true;
-			
+			MainMenuStrip.BackColor = Color.FromName(cfg.COL_bkgnd);
+
 			MainMenuStrip.Show();
-
-
-			//menu.Items.Clear();
-			menu.BackColor = Color.FromName(cfg.COL_bkgnd);
 
 			ResumeLayout(true);
 
@@ -95,30 +101,52 @@ namespace QM
 			formSz.Width = mnuSz.Width;
 			formSz.Height = mnuSz.Height + this.UpperBarHeight + this.LowerBarHeight;
 			this.Size = formSz;
-			
 		}
-		
-		void SetupMenus()
+
+		/// <summary>
+		/// Setup all menus in the config file
+		/// </summary>
+		bool SetupMenus()
 		{
-			for(int i = 0; i<cfg.Comandi.Count; i++)
-				{
-					menus[i] = new MenuStrip();
-					menus[i].LayoutStyle = ToolStripLayoutStyle.VerticalStackWithOverflow;
-					menus[i].Location = new Point(0,this.UpperBarHeight);
-					menus[i].AutoSize = true;
-					ReadAndSetupMenu(i);
-				}
+			bool ok = true;
+			for(int i = 0;i < cfg.Comandi.Count;i++)
+			{
+				menus[i] = new MenuStrip();
+				menus[i].LayoutStyle = ToolStripLayoutStyle.VerticalStackWithOverflow;
+				menus[i].Location = new Point(0,this.UpperBarHeight);
+				menus[i].AutoSize = true;
+				if(!ReadAndSetupMenu(i))
+					ok = false;
+			}
+			return ok;
 		}
-		void ReadAndSetupMenu(int iM)
+
+		/// <summary>
+		/// Read file and set-up iM menu
+		/// </summary>
+		/// <param name="iM"></param>
+		bool ReadAndSetupMenu(int iM)
 		{
+			bool mnuOk = false;
 			uint commandCount;
 			bool isFirstEmptySet = false;
 
 			menus[iM].Items.Clear();
 
 			linee = ReadMenuFile(iM);
-			menuTree = LinesToTree(linee, out commandCount);
-			comandi[iM] = new string[commandCount+1];
+			menuTree = LinesToTree(linee,out commandCount);
+
+			if(menuTree != null)
+			{
+				if(menuTree.ItemsCount() > cfg.MaxEntries)      // First level items
+				{
+					NcMessageBox.Show(this,$"Menu troppo lungo");
+					return mnuOk;
+				}
+
+			}
+
+			comandi[iM] = new string[commandCount + 1];
 
 			if(cfg.Verbose)
 			{
@@ -127,23 +155,23 @@ namespace QM
 			}
 
 			linee.Clear();
-			linee = null;					// Ready to dispose by GC
+			linee = null;                   // Ready to dispose by GC
 
 			if((menuTree != null) && (comandi[iM] != null))
 			{
 				foreach(TreeItem<MnuItem> item in menuTree.TreeItems(TreeSearchType.depth_first))
 				{
-					item.Data.Tsmi = new ToolStripMenuItem(item.Data.Txt, null);
+					item.Data.Tsmi = new ToolStripMenuItem(item.Data.Txt,null);
 					item.Data.Tsmi.TextAlign = ContentAlignment.MiddleLeft;
 					item.Data.Tsmi.Name = $"{item.Data.ID.ToString($"D{IDLEN}")}";
 					item.Data.Tsmi.BackColor = Color.FromName(cfg.COL_bkgnd);
 
-					if(item.Data.Command.Length > 1)				// Add command handler
+					if(item.Data.Command.Length > 1)                // Add command handler
 					{
 						item.Data.Tsmi.Click += TsmiOnClick;
 						comandi[iM][item.Data.ID] = item.Data.Command;
 					}
-					else if((!isFirstEmptySet) && (!item.IsRoot))		// Add change menu handler (first item, not root)
+					else if((!isFirstEmptySet) && (!item.IsRoot))       // Add change menu handler (first item, not root)
 					{
 						item.Data.Tsmi.Click += menuTitleOnClick;
 						isFirstEmptySet = true;
@@ -162,12 +190,22 @@ namespace QM
 					}
 				}
 				menuTree.Clear();
+				mnuOk = true;
 			}
+			return mnuOk;
 		}
 
-		void menuTitleOnClick(object? sender, EventArgs e)
+		/// <summary>
+		/// Chamge menu
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="e"></param>
+		void menuTitleOnClick(object? sender,EventArgs e)
 		{
-			NcMessageBox.Show(this, "CLICK !!!","Change menu");	
+			iMenu++;
+			if(iMenu >= cfg.Comandi.Count)
+				iMenu = 0;
+			SetLayout();
 		}
 
 		/// <summary>
@@ -175,44 +213,49 @@ namespace QM
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		void TsmiOnClick(object? sender, EventArgs e)
+		void TsmiOnClick(object? sender,EventArgs e)
 		{
 			uint id;
-			
-			if((sender != null)&&(comandi!=null))
+
+			if((sender != null) && (comandi != null))
 			{
 				if(((ToolStripMenuItem)sender).Name != null)
 				{
-					if(uint.TryParse(((ToolStripMenuItem)sender).Name, out id))
+					if(uint.TryParse(((ToolStripMenuItem)sender).Name,out id))
 					{
-						bool ok = true;
-						if(cfg.Verbose)
+						if(iMenu < comandi.Length)
 						{
-							#warning METTERE ...comandi[iMenu][id]...
-							if(NcMessageBox.Show(this,comandi[0][id],"Execute ?",MessageBoxButtons.YesNo) != DialogResult.Yes)
+							if((comandi[iMenu] != null) && id < comandi[iMenu].Length)
 							{
-								ok = false;
-							}
-						}
-						if(ok)
-						{
-							try
-							{
-								// System.Diagnostics.Process.Start(comandi[id]) forse non funziona correttamente con .NET 8.0
+								bool ok = true;
+								if(cfg.Verbose)
+								{
+									if(NcMessageBox.Show(this,comandi[iMenu][id],"Execute ?",MessageBoxButtons.YesNo) != DialogResult.Yes)
+									{
+										ok = false;
+									}
+								}
+								if(ok)
+								{
+									try
+									{
+										// System.Diagnostics.Process.Start(comandi[id]) forse non funziona correttamente con .NET 8.0
 
-								ProcessStartInfo psinfo= new ProcessStartInfo();
-								psinfo.FileName = comandi[0][id];
-								psinfo.UseShellExecute = true;
-							
-								Process proc = new Process();
-								proc.StartInfo = psinfo;
-								proc.EnableRaisingEvents = true;
-								proc.Start();
+										ProcessStartInfo psinfo = new ProcessStartInfo();
+										psinfo.FileName = comandi[iMenu][id];
+										psinfo.UseShellExecute = true;
 
-							}
-							catch(Exception ex)
-							{
-								NcMessageBox.Show(this,ex.Message);
+										Process proc = new Process();
+										proc.StartInfo = psinfo;
+										proc.EnableRaisingEvents = true;
+										proc.Start();
+
+									}
+									catch(Exception ex)
+									{
+										NcMessageBox.Show(this,ex.Message);
+									}
+								}
 							}
 						}
 					}
@@ -231,25 +274,25 @@ namespace QM
 			List<string> lines = new List<string>();
 			try
 			{
-				int nItem = 1;		// Valid items count, starting from 1, number 0 is for the root. 
+				int nItem = 1;      // Valid items count, starting from 1, number 0 is for the root. 
 				string? line;
 				StreamReader sr = new StreamReader(cfg.Comandi[iM]);
-				while ((line = sr.ReadLine()) != null)
+				while((line = sr.ReadLine()) != null)
 				{
-					if( (line.Length > 0) && (!line.StartsWith(cfg.CHR_Commento)))		// Line is noot empty or is a comment
+					if((line.Length > 0) && (!line.StartsWith(cfg.CHR_Commento)))       // Line is noot empty or is a comment
 					{
 						int indx;
-						if((indx = line.IndexOf(cfg.CHR_Commento)) != -1)		// Remove from comment character to the end of the line
+						if((indx = line.IndexOf(cfg.CHR_Commento)) != -1)       // Remove from comment character to the end of the line
 						{
-							line = line.Substring(0, indx);							
+							line = line.Substring(0,indx);
 						}
 						//int _sep = (line.IndexOf(cfg.Sep)!=-1) ? 1 : 0; int _ini=...; int _fin=...; //if( _sep+_ini+_fin == 1)...
-						bool _fin = line.IndexOf(cfg.MnuFin) != -1;				// 'line' contains the end-menu separator.
-						bool _ini = line.IndexOf(cfg.MnuIni) != -1;				// 'line' contains the start-menu separator.
-						if((line.IndexOf(cfg.Sep)!=-1) || _ini || _fin)			// If line contains a command
+						bool _fin = line.IndexOf(cfg.MnuFin) != -1;             // 'line' contains the end-menu separator.
+						bool _ini = line.IndexOf(cfg.MnuIni) != -1;             // 'line' contains the start-menu separator.
+						if((line.IndexOf(cfg.Sep) != -1) || _ini || _fin)           // If line contains a command
 						{
-							int nIt = _fin ? 0 : nItem++;						// If it is not an end-menu, set and increase item count.
-							lines.Add($"{(nIt.ToString($"D{IDLEN}"))}\t{line.Trim()}");	// Add 'line'
+							int nIt = _fin ? 0 : nItem++;                       // If it is not an end-menu, set and increase item count.
+							lines.Add($"{(nIt.ToString($"D{IDLEN}"))}\t{line.Trim()}"); // Add 'line'
 						}
 					}
 				}
@@ -261,9 +304,9 @@ namespace QM
 			}
 			finally
 			{
-				#if DEBUG
+#if DEBUG
 				MessageBox.Show($"Lette {lines.Count} linee");
-				#endif
+#endif
 			}
 			return lines;
 		}
@@ -275,40 +318,40 @@ namespace QM
 		/// </summary>
 		/// <param name="lines">List<string></param>
 		/// <returns>TreeItem<MnuItem> root node</returns>
-		TreeItem<MnuItem>? LinesToTree(List<string> lines, out uint itemCount)
+		TreeItem<MnuItem>? LinesToTree(List<string> lines,out uint itemCount)
 		{
-			string[] seps = {cfg.Sep,cfg.MnuIni,cfg.MnuFin};
+			string[] seps = { cfg.Sep,cfg.MnuIni,cfg.MnuFin };
 			bool ok = true;
 
 			TreeItem<MnuItem>? ret = null;
 			itemCount = 0;
 			Stack<TreeItem<MnuItem>> stack = new Stack<TreeItem<MnuItem>>();
-			
-			stack.Push(new TreeItem<MnuItem>(new MnuItem(0),null));		// Create and push root tree item into the stack
+
+			stack.Push(new TreeItem<MnuItem>(new MnuItem(0),null));     // Create and push root tree item into the stack
 
 			uint id;
 			uint idCounter = 0;
 
 			if(lines != null)
 			{
-				foreach(string line in lines)							// Read lines
+				foreach(string line in lines)                           // Read lines
 				{
-					if(line.Length > IDLEN)								// If length is enough...
+					if(line.Length > IDLEN)                             // If length is enough...
 					{
-						string lineId = line.Substring(0, IDLEN);		// Extract parts
+						string lineId = line.Substring(0,IDLEN);        // Extract parts
 						string lineNoId = line.Substring(IDLEN + 1);
-						if(uint.TryParse(lineId,out id))				// Get ID
+						if(uint.TryParse(lineId,out id))                // Get ID
 						{
-							if(id > 0)									// If ID > 0 (not zero = root or end-of-menu line, no item)...
-							{											// ...separate text
-								string[] parts = lineNoId.Split(seps,StringSplitOptions.RemoveEmptyEntries|StringSplitOptions.TrimEntries);
-								if(parts.Length > 0)					// If one part (or more...)
+							if(id > 0)                                  // If ID > 0 (not zero = root or end-of-menu line, no item)...
+							{                                           // ...separate text
+								string[] parts = lineNoId.Split(seps,StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+								if(parts.Length > 0)                    // If one part (or more...)
 								{
 									string command;
-									if(parts.Length > 1)				// If a second part exists...
+									if(parts.Length > 1)                // If a second part exists...
 									{
-										command = parts[1];				// ...set the command
-										id = ++idCounter;				// ...increases and set counter as id
+										command = parts[1];             // ...set the command
+										id = ++idCounter;               // ...increases and set counter as id
 									}
 									else
 									{
@@ -316,23 +359,23 @@ namespace QM
 										id = 0;
 									}
 
-									TreeItem<MnuItem> itm = new TreeItem<MnuItem>(new MnuItem(id,parts[0],command) , stack.Peek());	// Add item to the tree
+									TreeItem<MnuItem> itm = new TreeItem<MnuItem>(new MnuItem(id,parts[0],command),stack.Peek());   // Add item to the tree
 
-									if(lineNoId.Contains(cfg.MnuIni))		// If current item has sub menu...
+									if(lineNoId.Contains(cfg.MnuIni))       // If current item has sub menu...
 									{
-										itm.Data.Command = string.Empty;	// ...clear command
-										stack.Push(itm);					// ...and push into the stack
+										itm.Data.Command = string.Empty;    // ...clear command
+										stack.Push(itm);                    // ...and push into the stack
 									}
 								}
 							}
-							else										// If ID = 0: end-of-line					
+							else                                        // If ID = 0: end-of-line					
 							{
-								if(lineNoId.Contains(cfg.MnuFin))		// Sub-menu end
+								if(lineNoId.Contains(cfg.MnuFin))       // Sub-menu end
 								{
 									stack.Pop();
 									if(stack.Count < 1)
 									{
-										NcMessageBox.Show(this, $"Errore: troppe linee con '{cfg.MnuFin}'.");
+										NcMessageBox.Show(this,$"Errore: troppe linee con '{cfg.MnuFin}'.");
 										ok = false;
 										break;
 									}
@@ -347,24 +390,24 @@ namespace QM
 				ok = false;
 			}
 
-			if((stack.Count == 1) && ok)	// Only the root item should remain in the stack
+			if((stack.Count == 1) && ok)    // Only the root item should remain in the stack
 			{
 				ret = stack.Pop();
 				itemCount = idCounter;
 			}
 			else
 			{
-				if (stack.Count > 1)
+				if(stack.Count > 1)
 				{
-					NcMessageBox.Show(this, $"Errore: troppe linee ({stack.Count-1}) con '{cfg.MnuIni}'.");
+					NcMessageBox.Show(this,$"Errore: troppe linee ({stack.Count - 1}) con '{cfg.MnuIni}'.");
 				}
 			}
 
-			stack.Clear();					// Free stack
-			
+			stack.Clear();                  // Free stack
+
 			return ret;
 		}
-	
+
 		/// <summary>
 		/// NcMessageBox with lines content
 		/// </summary>
@@ -374,12 +417,12 @@ namespace QM
 			StringBuilder sb = new StringBuilder();
 			if(linee != null)
 			{
-				for(il =0; il < linee.Count; il++)
+				for(il = 0;il < linee.Count;il++)
 				{
 					sb.AppendLine(linee[il]);
 				}
 			}
-			NcMessageBox.Show(this, sb.ToString(),"Lines");
+			NcMessageBox.Show(this,sb.ToString(),"Lines");
 		}
 
 		/// <summary>
@@ -389,9 +432,28 @@ namespace QM
 		{
 			if(menuTree != null)
 			{
-				NcMessageBox.Show(this, menuTree.ToTreeString(),"Menu tree");
+				NcMessageBox.Show(this,menuTree.ToTreeString(),"Menu tree");
 			}
 		}
 
+		/// <summary>
+		/// Form is activater oe deactivated
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="e"></param>
+		private void Form1_ChangeActivation(object sender,EventArgs e)
+		{
+			if(quitWhenActivated)       // Quit if an error is detected during Form Load
+				Close();
+		}
+
+		private void Form1_Resize(object sender,EventArgs e)
+		{
+			if(this.Width < cfg.MinWidth)
+			{
+				this.Width = cfg.MinWidth;
+				Invalidate();
+			}
+		}
 	}
 }

@@ -17,6 +17,8 @@ namespace QM
 		public string Sep;
 		public string MnuIni;
 		public string MnuFin;
+		public int MinWidth;
+		public int MaxEntries;
 
 		public string COL_bkgnd;
 		public string COL_title;
