@@ -21,7 +21,10 @@ namespace QM
 
 		List<string>? linee;				// Linee con i comandi
 		TreeItem<MnuItem>? menuTree;		// Albero con i comandi
-		string[][]? comandi;				// Array degli array (jagged) dei comandi
+		MenuStrip[] menus;					// I menù caricati
+		string[]?[] comandi;				// Array degli array (jagged) dei comandi
+
+		int iMenu;							// Indice del menù corrente
 
 		/// <summary>
 		/// CTOR con parametri
@@ -38,6 +41,7 @@ namespace QM
 			this.Title = cfg.Titolo;
 			this.StatusText = string.Empty;
 			comandi = new string[cfg.Comandi.Count][];
+			menus = new MenuStrip[cfg.Comandi.Count];
 		}
 
 		/// <summary>
@@ -47,23 +51,45 @@ namespace QM
 		/// <param name="e"></param>
 		private void Form1_Load(object sender,EventArgs e)
 		{
-			//uint commandCount;
+			iMenu = 0;
 
-			menu.AutoSize = true;
-
-			menu.Location = new Point(0,this.UpperBarHeight);
-			menu.Items.Clear();
-			menu.BackColor = Color.FromName(cfg.COL_bkgnd);
-
-			menu.SuspendLayout();
+			SetupMenus();
+			
+			for(int i=0; i< cfg.Comandi.Count; i++)
+			{
+				Controls.Add(menus[i]);
+				menus[i].Hide();
+			}
 			SuspendLayout();
 			
-			ReadAndSetupMenu();
+			//menu = menus[iMenu];
+			
+			//menu.Dock = DockStyle.None;
+			//menu.LayoutStyle = ToolStripLayoutStyle.VerticalStackWithOverflow;
+			//menu.Location = new Point(0,this.UpperBarHeight);
+			//menu.AutoSize = true;
+			
+			//Controls.Add(menu);
+			MainMenuStrip = menu;
+			
+			menu.Hide();
+			//menus[0].Show();
+			MainMenuStrip = menus[0];
+
+			MainMenuStrip.Dock = DockStyle.None;
+			MainMenuStrip.LayoutStyle = ToolStripLayoutStyle.VerticalStackWithOverflow;
+			MainMenuStrip.Location = new Point(0,this.UpperBarHeight);
+			MainMenuStrip.AutoSize = true;
+			
+			MainMenuStrip.Show();
+
+
+			//menu.Items.Clear();
+			menu.BackColor = Color.FromName(cfg.COL_bkgnd);
 
 			ResumeLayout(true);
-			menu.ResumeLayout(true);
 
-			Size mnuSz = menu.Size;
+			Size mnuSz = MainMenuStrip.Size;
 			Size formSz = this.Size;
 
 			formSz.Width = mnuSz.Width;
@@ -71,16 +97,28 @@ namespace QM
 			this.Size = formSz;
 			
 		}
-
-		void ReadAndSetupMenu(int iMenu = 0)
+		
+		void SetupMenus()
+		{
+			for(int i = 0; i<cfg.Comandi.Count; i++)
+				{
+					menus[i] = new MenuStrip();
+					menus[i].LayoutStyle = ToolStripLayoutStyle.VerticalStackWithOverflow;
+					menus[i].Location = new Point(0,this.UpperBarHeight);
+					menus[i].AutoSize = true;
+					ReadAndSetupMenu(i);
+				}
+		}
+		void ReadAndSetupMenu(int iM)
 		{
 			uint commandCount;
-			
 			bool isFirstEmptySet = false;
 
-			linee = ReadMenuFile();
+			menus[iM].Items.Clear();
+
+			linee = ReadMenuFile(iM);
 			menuTree = LinesToTree(linee, out commandCount);
-			comandi[iMenu] = new string[commandCount+1];
+			comandi[iM] = new string[commandCount+1];
 
 			if(cfg.Verbose)
 			{
@@ -91,9 +129,8 @@ namespace QM
 			linee.Clear();
 			linee = null;					// Ready to dispose by GC
 
-			if(menuTree != null)
+			if((menuTree != null) && (comandi[iM] != null))
 			{
-				//menu.Items.Add(new ToolStripMenuItem(cfg.Comandi, null));
 				foreach(TreeItem<MnuItem> item in menuTree.TreeItems(TreeSearchType.depth_first))
 				{
 					item.Data.Tsmi = new ToolStripMenuItem(item.Data.Txt, null);
@@ -104,7 +141,7 @@ namespace QM
 					if(item.Data.Command.Length > 1)				// Add command handler
 					{
 						item.Data.Tsmi.Click += TsmiOnClick;
-						comandi[iMenu][item.Data.ID] = item.Data.Command;
+						comandi[iM][item.Data.ID] = item.Data.Command;
 					}
 					else if((!isFirstEmptySet) && (!item.IsRoot))		// Add change menu handler (first item, not root)
 					{
@@ -114,7 +151,7 @@ namespace QM
 
 					if(item.Depth == 1)
 					{
-						menu.Items.Add(item.Data.Tsmi);
+						menus[iM].Items.Add(item.Data.Tsmi);
 					}
 					else
 					{
@@ -189,14 +226,14 @@ namespace QM
 		///  Rimuove i commenti, scarta le linee non valide e numera le linee
 		/// </summary>
 		/// <returns>List<string> linee lette</returns>
-		List<string> ReadMenuFile(int iMenu = 0)
+		List<string> ReadMenuFile(int iM = 0)
 		{
 			List<string> lines = new List<string>();
 			try
 			{
 				int nItem = 1;		// Valid items count, starting from 1, number 0 is for the root. 
 				string? line;
-				StreamReader sr = new StreamReader(cfg.Comandi[iMenu]);
+				StreamReader sr = new StreamReader(cfg.Comandi[iM]);
 				while ((line = sr.ReadLine()) != null)
 				{
 					if( (line.Length > 0) && (!line.StartsWith(cfg.CHR_Commento)))		// Line is noot empty or is a comment
