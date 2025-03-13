@@ -174,6 +174,7 @@ namespace QM
 					else if((!isFirstEmptySet) && (!item.IsRoot))       // Add change menu handler (first item, not root)
 					{
 						item.Data.Tsmi.Click += menuTitleOnClick;
+						item.Data.Tsmi.BackColor = Color.FromName(cfg.COL_buttons);
 						isFirstEmptySet = true;
 					}
 

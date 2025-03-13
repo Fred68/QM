@@ -1,5 +1,9 @@
 
 using Fred68.CfgReader;
+using NcForm;
+using System.Reflection;
+using System.Resources;
+
 
 namespace QM
 {
@@ -8,7 +12,7 @@ namespace QM
     {
         public readonly static string _cfgFile = "QM.cfg";
         static CFG? cfg;
-
+        static NcSplashScreen sps;
 
         /// <summary>
         ///  The main entry point for the application.
@@ -16,6 +20,21 @@ namespace QM
         [STAThread]
         static void Main()
         {
+            Image? logo = null;
+
+            ApplicationConfiguration.Initialize();
+            
+            //string[] resmanes = Assembly.GetExecutingAssembly().GetManifestResourceNames();
+            ResourceManager rm = new ResourceManager("QM.ImagesResources", Assembly.GetExecutingAssembly());
+            object? obj = rm.GetObject("Logo");
+            if(obj != null)
+            {
+                logo = (Image?) obj;
+            }
+
+            sps = new NcSplashScreen(new Size(200,100),50,logo,null);
+            sps.Show();
+            //sps.ShowDialog();
 
             cfg = new CFG();
             cfg.CHR_ListSeparator = @";";
@@ -36,7 +55,10 @@ namespace QM
                 return;
             }
 
-            ApplicationConfiguration.Initialize();
+            //ApplicationConfiguration.Initialize();
+
+            //sps = new NcSplashScreen(new Size(200,100),0,null,null);
+            //sps.Show();
 
             NcForms.NcFormStyle ncfs = new NcForms.NcFormStyle(
                 NcForms.NcWindowsStyles.TopMost
