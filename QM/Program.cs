@@ -32,8 +32,8 @@ namespace QM
                 logo = (Image?) obj;
             }
 
-            sps = new NcSplashScreen(new Size(200,100),50,logo,null);
-            sps.Show();
+            sps = new NcSplashScreen(new Size(200,100),50,logo,true,2500,false);
+            //sps.Show();
             //sps.ShowDialog();
 
             cfg = new CFG();
