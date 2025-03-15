@@ -39,6 +39,7 @@ namespace QM
 			this.Opacity = cfg.Opacity;
 			this.Title = cfg.Titolo;
 			this.StatusText = string.Empty;
+			this.ShowInTaskbar = cfg.ShowInTaskbar;
 			comandi = new string[cfg.Comandi.Count][];
 			menus = new MenuStrip[cfg.Comandi.Count];
 			quitWhenActivated = false;

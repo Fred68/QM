@@ -19,6 +19,7 @@ namespace QM
 		public string MnuFin;
 		public int MinWidth;
 		public int MaxEntries;
+		public bool ShowInTaskbar;
 
 		public string COL_bkgnd;
 		public string COL_title;

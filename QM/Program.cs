@@ -3,6 +3,7 @@ using Fred68.CfgReader;
 using NcForm;
 using System.Reflection;
 using System.Resources;
+using System.Drawing;
 
 
 namespace QM
@@ -24,14 +25,17 @@ namespace QM
 
             ApplicationConfiguration.Initialize();
             
-            //string[] resmanes = Assembly.GetExecutingAssembly().GetManifestResourceNames();
-            ResourceManager rm = new ResourceManager("QM.ImagesResources", Assembly.GetExecutingAssembly());
-            object? obj = rm.GetObject("Logo");
-            if(obj != null)
-            {
-                logo = (Image?) obj;
-            }
+            string[] resmanes = Assembly.GetExecutingAssembly().GetManifestResourceNames();
 
+            // ERRORE: NON RICONOSCE OGGETTI BITMAP IN FILE RESX
+            //ResourceManager rm = new ResourceManager("QM.Resource1", Assembly.GetExecutingAssembly());
+            //object? obj = rm.GetObject("logo03"); 
+            //if(obj != null)
+            //{
+            //    logo = (Image?) obj;
+            //}
+
+            
             sps = new NcSplashScreen(new Size(200,100),50,logo,true,2500,false);
             //sps.Show();
             //sps.ShowDialog();
