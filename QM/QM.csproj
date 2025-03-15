@@ -15,16 +15,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Resources\logo03.png" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\logo03.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\CustomForm\NcForm\NcForm.csproj" />
     <ProjectReference Include="..\..\Fred68\CfgReader.NET\CfgReaderLib\CfgReaderLib.csproj" />
     <ProjectReference Include="..\..\Fred68\Tree\Tree\Tree.csproj" />
@@ -38,6 +28,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="QM.cfg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\logo03.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

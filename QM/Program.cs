@@ -29,12 +29,15 @@ namespace QM
 
             // ERRORE: NON RICONOSCE OGGETTI BITMAP IN FILE RESX
             //ResourceManager rm = new ResourceManager("QM.Resource1", Assembly.GetExecutingAssembly());
+
             //object? obj = rm.GetObject("logo03"); 
             //if(obj != null)
             //{
             //    logo = (Image?) obj;
             //}
 
+            logo = Image.FromFile("Resources\\logo03.png");
+                       
             
             sps = new NcSplashScreen(new Size(200,100),50,logo,true,2500,false);
             //sps.Show();
