@@ -12,7 +12,12 @@
     <Copyright>FcSoft</Copyright>
     <AssemblyVersion>1.0.2</AssemblyVersion>
     <FileVersion>1.0.2</FileVersion>
+    <ApplicationIcon>Fc.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Fc.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\CustomForm\NcForm\NcForm.csproj" />

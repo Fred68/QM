@@ -28,78 +28,19 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
+			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
 			menu = new MenuStrip();
-			//sadsdToolStripMenuItem = new ToolStripMenuItem();
-			//ssssToolStripMenuItem = new ToolStripMenuItem();
-			//sssToolStripMenuItem = new ToolStripMenuItem();
-			//ddToolStripMenuItem = new ToolStripMenuItem();
-			//ddddToolStripMenuItem = new ToolStripMenuItem();
-			//cccToolStripMenuItem = new ToolStripMenuItem();
-			//ccccToolStripMenuItem = new ToolStripMenuItem();
-			//dddToolStripMenuItem = new ToolStripMenuItem();
-			menu.SuspendLayout();
 			SuspendLayout();
 			// 
 			// menu
 			// 
 			menu.Dock = DockStyle.None;
-			//menu.Items.AddRange(new ToolStripItem[] { sadsdToolStripMenuItem,ccccToolStripMenuItem,dddToolStripMenuItem });
 			menu.LayoutStyle = ToolStripLayoutStyle.VerticalStackWithOverflow;
 			menu.Location = new Point(9,25);
 			menu.Name = "menu";
-			menu.Size = new Size(55,63);
+			menu.Size = new Size(30,206);
 			menu.TabIndex = 3;
 			menu.Text = "menuStrip1";
-			// 
-			// sadsdToolStripMenuItem
-			// 
-			//sadsdToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { ssssToolStripMenuItem,sssToolStripMenuItem,cccToolStripMenuItem });
-			//sadsdToolStripMenuItem.Name = "sadsdToolStripMenuItem";
-			//sadsdToolStripMenuItem.Size = new Size(48,19);
-			//sadsdToolStripMenuItem.Text = "sadsd";
-			// 
-			// ssssToolStripMenuItem
-			// 
-			//ssssToolStripMenuItem.Name = "ssssToolStripMenuItem";
-			//ssssToolStripMenuItem.Size = new Size(94,22);
-			//ssssToolStripMenuItem.Text = "ssss";
-			// 
-			// sssToolStripMenuItem
-			// 
-			//sssToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { ddToolStripMenuItem,ddddToolStripMenuItem });
-			//sssToolStripMenuItem.Name = "sssToolStripMenuItem";
-			//sssToolStripMenuItem.Size = new Size(94,22);
-			//sssToolStripMenuItem.Text = "sss";
-			// 
-			// ddToolStripMenuItem
-			// 
-			//ddToolStripMenuItem.Name = "ddToolStripMenuItem";
-			//ddToolStripMenuItem.Size = new Size(102,22);
-			//ddToolStripMenuItem.Text = "dd";
-			// 
-			// ddddToolStripMenuItem
-			// 
-			//ddddToolStripMenuItem.Name = "ddddToolStripMenuItem";
-			//ddddToolStripMenuItem.Size = new Size(102,22);
-			//ddddToolStripMenuItem.Text = "dddd";
-			// 
-			// cccToolStripMenuItem
-			// 
-			//cccToolStripMenuItem.Name = "cccToolStripMenuItem";
-			//cccToolStripMenuItem.Size = new Size(94,22);
-			//cccToolStripMenuItem.Text = "ccc";
-			// 
-			// ccccToolStripMenuItem
-			// 
-			//ccccToolStripMenuItem.Name = "ccccToolStripMenuItem";
-			//ccccToolStripMenuItem.Size = new Size(48,19);
-			//ccccToolStripMenuItem.Text = "cccc";
-			// 
-			// dddToolStripMenuItem
-			// 
-			//dddToolStripMenuItem.Name = "dddToolStripMenuItem";
-			//dddToolStripMenuItem.Size = new Size(48,19);
-			//dddToolStripMenuItem.Text = "ddd";
 			// 
 			// Form1
 			// 
@@ -107,6 +48,7 @@
 			AutoScaleMode = AutoScaleMode.Font;
 			ClientSize = new Size(110,257);
 			Controls.Add(menu);
+			Icon = (Icon)resources.GetObject("$this.Icon");
 			MainMenuStrip = menu;
 			Name = "Form1";
 			ShowInTaskbar = false;
@@ -116,8 +58,6 @@
 			Load += Form1_Load;
 			Resize += Form1_Resize;
 			Controls.SetChildIndex(menu,0);
-			menu.ResumeLayout(false);
-			menu.PerformLayout();
 			ResumeLayout(false);
 			PerformLayout();
 		}
