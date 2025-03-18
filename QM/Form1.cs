@@ -3,6 +3,7 @@ using System.Text;
 using Fred68.TreeItem;
 using Tree;
 using System.Diagnostics;
+using System.Reflection;
 //using System.Windows.Forms.VisualStyles;
 
 namespace QM
@@ -22,7 +23,7 @@ namespace QM
 		string[]?[] comandi;                // Array degli array (jagged) dei comandi
 
 		int iMenu;                          // Indice del menù corrente
-
+		Font mnuFont;
 		bool quitWhenActivated;
 
 		/// <summary>
@@ -40,6 +41,9 @@ namespace QM
 			this.Title = cfg.Titolo;
 			this.StatusText = string.Empty;
 			this.ShowInTaskbar = cfg.ShowInTaskbar;
+			this.Name = cfg.Titolo;
+			this.Text = cfg.Titolo;
+			mnuFont = new Font(this.Font.FontFamily.Name,cfg.MnuFontSize);
 			comandi = new string[cfg.Comandi.Count][];
 			menus = new MenuStrip[cfg.Comandi.Count];
 			quitWhenActivated = false;
@@ -53,7 +57,7 @@ namespace QM
 		private void Form1_Load(object sender,EventArgs e)
 		{
 			iMenu = 0;
-
+			
 			menu.Hide();
 
 			if(!SetupMenus())
@@ -116,6 +120,7 @@ namespace QM
 				menus[i].LayoutStyle = ToolStripLayoutStyle.VerticalStackWithOverflow;
 				menus[i].Location = new Point(0,this.UpperBarHeight);
 				menus[i].AutoSize = true;
+				menus[i].Font = mnuFont;
 				if(!ReadAndSetupMenu(i))
 					ok = false;
 			}
@@ -166,6 +171,7 @@ namespace QM
 					item.Data.Tsmi.TextAlign = ContentAlignment.MiddleLeft;
 					item.Data.Tsmi.Name = $"{item.Data.ID.ToString($"D{IDLEN}")}";
 					item.Data.Tsmi.BackColor = Color.FromName(cfg.COL_bkgnd);
+					
 
 					if(item.Data.Command.Length > 1)                // Add command handler
 					{
@@ -456,6 +462,42 @@ namespace QM
 				this.Width = cfg.MinWidth;
 				Invalidate();
 			}
+		}
+
+		/// <summary>
+		/// Override to get correct assembly reference
+		/// </summary>
+		/// <param name="asm"></param>
+		/// <param name="details"></param>
+		/// <returns></returns>
+		public override string Version(Assembly asm, bool details = false)
+		{
+			StringBuilder strb = new StringBuilder();
+			try
+			{
+				strb.AppendLine(Application.ProductName);
+				if(asm != null)
+				{
+					System.Version? v = asm.GetName().Version;
+					if(v != null) strb.AppendLine($"Version: {v.ToString()} ({BuildTime(asm)})");
+					if(details)
+					{
+						string? n = asm.GetName().Name;
+						if(n != null) strb.AppendLine("Assembly name: " + n);
+						strb.AppendLine("BuildTime time: "+ File.GetCreationTime(asm.Location).ToString());
+						strb.AppendLine("BuildTime number: " + BuildTime(asm,true));
+						strb.AppendLine("Executable path: " + Application.ExecutablePath);
+					}
+				}
+				strb.AppendLine("Copyright: " + Application.CompanyName);
+			}
+			catch	{}
+			return strb.ToString();
+		}
+
+		protected override void OnHelp()
+		{
+			MessageBox.Show(Version(Assembly.GetExecutingAssembly(),true));
 		}
 	}
 }
