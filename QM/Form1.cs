@@ -23,7 +23,7 @@ namespace QM
 		string[]?[] comandi;                // Array degli array (jagged) dei comandi
 
 		int iMenu;                          // Indice del menù corrente
-		Font mnuFont;
+		Font mnuFont, mnuFontBold;
 		bool quitWhenActivated;
 
 		/// <summary>
@@ -44,6 +44,7 @@ namespace QM
 			this.Name = cfg.Titolo;
 			this.Text = cfg.Titolo;
 			mnuFont = new Font(this.Font.FontFamily.Name,cfg.MnuFontSize);
+			mnuFontBold = new Font(this.Font.FontFamily.Name,cfg.MnuFontSize,FontStyle.Bold);
 			comandi = new string[cfg.Comandi.Count][];
 			menus = new MenuStrip[cfg.Comandi.Count];
 			quitWhenActivated = false;
@@ -167,12 +168,17 @@ namespace QM
 			{
 				foreach(TreeItem<MnuItem> item in menuTree.TreeItems(TreeSearchType.depth_first))
 				{
-					item.Data.Tsmi = new ToolStripMenuItem(item.Data.Txt,null);
+					string txt;
+					bool bold = item.Data.Txt.StartsWith(cfg.boldChar);
+					txt = bold ? item.Data.Txt.Substring(1) : item.Data.Txt;
+					item.Data.Tsmi = new ToolStripMenuItem(txt,null);
 					item.Data.Tsmi.TextAlign = ContentAlignment.MiddleLeft;
 					item.Data.Tsmi.Name = $"{item.Data.ID.ToString($"D{IDLEN}")}";
 					item.Data.Tsmi.BackColor = Color.FromName(cfg.COL_bkgnd);
-					
-
+					if(bold)
+					{
+						item.Data.Tsmi.Font = mnuFontBold;
+					}
 					if(item.Data.Command.Length > 1)                // Add command handler
 					{
 						item.Data.Tsmi.Click += TsmiOnClick;
@@ -182,6 +188,7 @@ namespace QM
 					{
 						item.Data.Tsmi.Click += menuTitleOnClick;
 						item.Data.Tsmi.BackColor = Color.FromName(cfg.COL_buttons);
+						item.Data.Tsmi.Font = mnuFontBold;
 						isFirstEmptySet = true;
 					}
 
