@@ -35,8 +35,10 @@ namespace QM
             //{
             //    logo = (Image?) obj;
             //}
-
-            logo = Image.FromFile("Resources\\logo03.png");
+            //Bitmap xxx = (Bitmap)Resource1.logo03;
+            //logo = xxx;
+            logo = (Bitmap)Resource1.logo03;
+            //logo = Image.FromFile("Resources\\logo03.png");
                        
             
             sps = new NcSplashScreen(new Size(200,100),50,logo,true,2500,false);

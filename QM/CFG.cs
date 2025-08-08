@@ -21,7 +21,8 @@ namespace QM
 		public int MaxEntries;
 		public bool ShowInTaskbar;
 		public int MnuFontSize;
-		public string boldChar;
+		public string BoldChar;
+		public string SubMenuStr;
 
 		public string COL_bkgnd;
 		public string COL_title;

@@ -169,8 +169,10 @@ namespace QM
 				foreach(TreeItem<MnuItem> item in menuTree.TreeItems(TreeSearchType.depth_first))
 				{
 					string txt;
-					bool bold = item.Data.Txt.StartsWith(cfg.boldChar);
+					bool bold = item.Data.Txt.StartsWith(cfg.BoldChar);
 					txt = bold ? item.Data.Txt.Substring(1) : item.Data.Txt;
+					if((!item.IsLeaf) && !txt.EndsWith(cfg.SubMenuStr))
+						txt += cfg.SubMenuStr;
 					item.Data.Tsmi = new ToolStripMenuItem(txt,null);
 					item.Data.Tsmi.TextAlign = ContentAlignment.MiddleLeft;
 					item.Data.Tsmi.Name = $"{item.Data.ID.ToString($"D{IDLEN}")}";
@@ -179,6 +181,10 @@ namespace QM
 					{
 						item.Data.Tsmi.Font = mnuFontBold;
 					}
+					else
+					{
+						item.Data.Tsmi.Font = mnuFont;
+					}	
 					if(item.Data.Command.Length > 1)                // Add command handler
 					{
 						item.Data.Tsmi.Click += TsmiOnClick;
