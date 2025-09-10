@@ -4,6 +4,7 @@ using Fred68.TreeItem;
 using Tree;
 using System.Diagnostics;
 using System.Reflection;
+using System.Diagnostics.Eventing.Reader;
 //using System.Windows.Forms.VisualStyles;
 
 namespace QM
@@ -21,6 +22,7 @@ namespace QM
 		TreeItem<MnuItem>? menuTree;        // Albero con i comandi
 		MenuStrip[] menus;                  // I menù caricati
 		string[]?[] comandi;                // Array degli array (jagged) dei comandi
+		List<string> commAuto;				// Lista comandi autoexec
 
 		int iMenu;                          // Indice del menù corrente
 		Font mnuFont, mnuFontBold;
@@ -46,6 +48,7 @@ namespace QM
 			mnuFont = new Font(this.Font.FontFamily.Name,cfg.MnuFontSize);
 			mnuFontBold = new Font(this.Font.FontFamily.Name,cfg.MnuFontSize,FontStyle.Bold);
 			comandi = new string[cfg.Comandi.Count][];
+			commAuto = new List<string>();
 			menus = new MenuStrip[cfg.Comandi.Count];
 			quitWhenActivated = false;
 		}
@@ -76,6 +79,10 @@ namespace QM
 			}
 
 			SetLayout(menu);
+
+			StringBuilder sb = new StringBuilder();
+			foreach(string s in commAuto)	{sb.AppendLine(s);}
+			MessageBox.Show(sb.ToString());
 		}
 
 		void SetLayout(MenuStrip? mnu = null)
@@ -137,7 +144,7 @@ namespace QM
 			bool mnuOk = false;
 			uint commandCount;
 			bool isFirstEmptySet = false;
-
+			
 			menus[iM].Items.Clear();
 
 			linee = ReadMenuFile(iM);
@@ -150,7 +157,6 @@ namespace QM
 					NcMessageBox.Show(this,$"Menu troppo lungo");
 					return mnuOk;
 				}
-
 			}
 
 			comandi[iM] = new string[commandCount + 1];
@@ -169,14 +175,32 @@ namespace QM
 				foreach(TreeItem<MnuItem> item in menuTree.TreeItems(TreeSearchType.depth_first))
 				{
 					string txt;
-					bool bold = item.Data.Txt.StartsWith(cfg.BoldChar);
-					txt = bold ? item.Data.Txt.Substring(1) : item.Data.Txt;
-					if((!item.IsLeaf) && !txt.EndsWith(cfg.SubMenuStr))
+					bool bold, auto, disable;
+					
+					txt = IdentifyFlags(item.Data.Txt, out bold, out auto, out disable);	// Identisy and remove flag chars
+					
+					#warning COMPLETARE auto
+
+					if((!item.IsLeaf) && ! txt.EndsWith(cfg.SubMenuStr))
 						txt += cfg.SubMenuStr;
 					item.Data.Tsmi = new ToolStripMenuItem(txt,null);
 					item.Data.Tsmi.TextAlign = ContentAlignment.MiddleLeft;
 					item.Data.Tsmi.Name = $"{item.Data.ID.ToString($"D{IDLEN}")}";
 					item.Data.Tsmi.BackColor = Color.FromName(cfg.COL_bkgnd);
+					
+					if(item.Previous != null)							// Disable, if father node is disabled
+					{
+						if(item.Previous.Data.Disabled)
+						{
+							disable = true;
+						}
+					}
+
+					if(disable)
+					{
+						item.Data.Disabled = true;
+					}
+										
 					if(bold)
 					{
 						item.Data.Tsmi.Font = mnuFontBold;
@@ -184,11 +208,17 @@ namespace QM
 					else
 					{
 						item.Data.Tsmi.Font = mnuFont;
-					}	
-					if(item.Data.Command.Length > 1)                // Add command handler
+					}
+
+					if(item.Data.Command.Length > 1)					// Add command handler
 					{
 						item.Data.Tsmi.Click += TsmiOnClick;
 						comandi[iM][item.Data.ID] = item.Data.Command;
+
+						if(auto)
+						{
+							commAuto.Add(item.Data.Command);	
+						}
 					}
 					else if((!isFirstEmptySet) && (!item.IsRoot))       // Add change menu handler (first item, not root)
 					{
@@ -198,22 +228,55 @@ namespace QM
 						isFirstEmptySet = true;
 					}
 
-					if(item.Depth == 1)
+					if(!item.Data.Disabled)								// Add to menu, if not disabled
 					{
-						menus[iM].Items.Add(item.Data.Tsmi);
-					}
-					else
-					{
-						if(item.Previous != null)
+						if(item.Depth == 1)
 						{
-							item.Previous.Data.Tsmi.DropDownItems.Add(item.Data.Tsmi);
+							menus[iM].Items.Add(item.Data.Tsmi);
+						}
+						else
+						{
+							if(item.Previous != null)
+							{
+								item.Previous.Data.Tsmi.DropDownItems.Add(item.Data.Tsmi);
+							}
 						}
 					}
+
+
 				}
 				menuTree.Clear();
 				mnuOk = true;
 			}
 			return mnuOk;
+		}
+
+		/// <summary>
+		/// Identify and remove cfg chars at the beginning of the line
+		/// </summary>
+		/// <param name="line"></param>
+		/// <param name="_bold"></param>
+		/// <param name="_auto"></param>
+		/// <param name="_disable"></param>
+		/// <returns>line w/out cfg chars</returns>
+		string IdentifyFlags(string line, out bool _bold, out bool _auto, out bool _disable)
+		{
+			string _prefix = cfg.BoldChar + cfg.AutoChar + cfg.DisabledChar;	// Prefix
+			string txt = line;
+			_bold = _auto= _disable = false;
+
+			if(txt.Length > 0)
+			{
+				char ch;
+				for(ch = txt[0]; _prefix.Contains(ch); ch = txt[0])
+				{
+					if(ch == cfg.BoldChar[0])		_bold = true;
+					if(ch == cfg.AutoChar[0])		_auto = true;
+					if(ch == cfg.DisabledChar[0])	_disable = true;
+					txt = txt.Substring(1);
+				}
+			}
+			return txt;
 		}
 
 		/// <summary>

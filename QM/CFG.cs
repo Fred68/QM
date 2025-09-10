@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace QM
 {
+	/// <summary>
+	/// Vedere QM.cfg
+	/// </summary>
 	public class CFG : CfgReader
 	{
 		public bool FastQuit;
@@ -21,14 +24,21 @@ namespace QM
 		public int MaxEntries;
 		public bool ShowInTaskbar;
 		public int MnuFontSize;
-		public string BoldChar;
 		public string SubMenuStr;
+
+		public string BoldChar;
+		public string AutoChar;
+		public string DisabledChar;
 
 		public string COL_bkgnd;
 		public string COL_title;
 		public string COL_status;
 		public string COL_buttons;
 		
+		
+		public string AutoFile;
+		public int AutoDelay;
+
 	}
 
 
