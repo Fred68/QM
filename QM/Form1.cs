@@ -5,7 +5,6 @@ using Tree;
 using System.Diagnostics;
 using System.Reflection;
 using System.Diagnostics.Eventing.Reader;
-//using System.Windows.Forms.VisualStyles;
 
 namespace QM
 {
@@ -21,12 +20,75 @@ namespace QM
 		List<string>? linee;                // Linee con i comandi
 		TreeItem<MnuItem>? menuTree;        // Albero con i comandi
 		MenuStrip[] menus;                  // I menù caricati
-		string[]?[] comandi;                // Array degli array (jagged) dei comandi
-		List<string> commAuto;				// Lista comandi autoexec
+		string?[][] comandi;                // Array degli array (jagged) dei comandi
+		
+		static System.Windows.Forms.Timer tmAuto;	// Timer per comandi autoexec
+		static List<string> commAuto;				// Lista comandi autoexec
+		static int delayAuto;						// Copia di cfg.AutoDelay
+		static Form1? mainForm;						// Riferimento
 
 		int iMenu;                          // Indice del menù corrente
 		Font mnuFont, mnuFontBold;
 		bool quitWhenActivated;
+
+		static Form1()
+		{
+			commAuto = new List<string>();
+			tmAuto = new System.Windows.Forms.Timer();
+			tmAuto.Tick += new EventHandler(TimerTickProcessor);
+		}
+
+		/// <summary>
+		/// Event handler del timer
+		/// </summary>
+		/// <param name="obj"></param>
+		/// <param name="ea"></param>
+		private static void TimerTickProcessor(Object? obj, EventArgs? ea)
+		{
+			tmAuto.Stop();						// Ferma il timer per lanciare il comando
+
+			tmAuto.Interval = delayAuto * 1000;	// Imposta il nuovo intervallo ripetuto
+			
+			if(commAuto.Count > 0 )
+			{
+				string cmd = commAuto[0];		// Estrae il comando
+				commAuto.RemoveAt(0);			// Lo toglie dalla lista
+				try
+				{								// Lo esegue
+
+					// System.Diagnostics.Process.Start(comandi[id]) forse non funziona correttamente con .NET 8.0
+
+					#if true
+					ProcessStartInfo psinfo = new ProcessStartInfo();
+					psinfo.FileName = cmd;
+					psinfo.UseShellExecute = true;
+					Process proc = new Process();
+					proc.StartInfo = psinfo;
+					proc.EnableRaisingEvents = true;
+					proc.Start();
+					#else
+					if(mainForm != null)	NcMessageBox.Show(mainForm, $"Comando:\n{cmd}");
+					#endif
+				}
+				catch(Exception ex)
+				{
+					if(mainForm != null)	NcMessageBox.Show(mainForm,ex.Message);
+				}
+
+			}
+
+			if(commAuto.Count > 0)				// Fa ripartire il timer, se ci sono altri comandi
+			{
+				tmAuto.Start();
+			}
+			else
+			{
+				tmAuto.Stop();					// Se no, ferma il timer e rilascia le risorse
+				tmAuto.Dispose();
+			}
+			
+
+		}
 
 		/// <summary>
 		/// CTOR con parametri
@@ -48,9 +110,12 @@ namespace QM
 			mnuFont = new Font(this.Font.FontFamily.Name,cfg.MnuFontSize);
 			mnuFontBold = new Font(this.Font.FontFamily.Name,cfg.MnuFontSize,FontStyle.Bold);
 			comandi = new string[cfg.Comandi.Count][];
-			commAuto = new List<string>();
+			
 			menus = new MenuStrip[cfg.Comandi.Count];
 			quitWhenActivated = false;
+
+			delayAuto = cfg.AutoDelay;
+			mainForm = this;
 		}
 
 		/// <summary>
@@ -61,29 +126,43 @@ namespace QM
 		private void Form1_Load(object sender,EventArgs e)
 		{
 			iMenu = 0;
-			
+
 			menu.Hide();
 
 			if(!SetupMenus())
 			{
 				NcMessageBox.Show(this,"Errore in uno dei menu. Fine programma.");
-				
-				quitWhenActivated = true;					// Force Close() as soon as possible, but not when loading (it generates an error)
+
+				quitWhenActivated = true;                   // Force Close() as soon as possible, but not when loading (it generates an error)
 			}
 
-			for(int i = 0;i < cfg.Comandi.Count;i++)
+			for(int i = 0;i < cfg.Comandi.Count;i++)        // Set MouseEnter/Leave base class event handler to new controls...
 			{
 				Controls.Add(menus[i]);
-				SetupControlEvents(menus[i]);				// Set MouseEnter/Leave base class event handler to new controls...
+				SetupControlEvents(menus[i]);
 				menus[i].Hide();
 			}
 
 			SetLayout(menu);
 
+			#if false
 			StringBuilder sb = new StringBuilder();
-			foreach(string s in commAuto)	{sb.AppendLine(s);}
+			sb.AppendLine($"First = {cfg.AutoFirstDelay} s.\t Delay = {cfg.AutoDelay} s.");
+			foreach(string s in commAuto)
+			{
+				sb.AppendLine(s);
+			}
 			MessageBox.Show(sb.ToString());
+			#endif
+
+			if(commAuto.Count > 0)
+			{
+				tmAuto.Interval = cfg.AutoFirstDelay * 1000;
+				tmAuto.Start();
+			}
 		}
+
+
 
 		void SetLayout(MenuStrip? mnu = null)
 		{
@@ -94,10 +173,12 @@ namespace QM
 				MainMenuStrip = mnu;
 			}
 
-			MainMenuStrip.Hide();
+			if(MainMenuStrip != null)
+			{
+				MainMenuStrip.Hide();
+			}
 
 			MainMenuStrip = menus[iMenu];
-
 			MainMenuStrip.Dock = DockStyle.None;
 			MainMenuStrip.LayoutStyle = ToolStripLayoutStyle.VerticalStackWithOverflow;
 			MainMenuStrip.Location = new Point(0,this.UpperBarHeight);
@@ -144,7 +225,7 @@ namespace QM
 			bool mnuOk = false;
 			uint commandCount;
 			bool isFirstEmptySet = false;
-			
+
 			menus[iM].Items.Clear();
 
 			linee = ReadMenuFile(iM);
@@ -176,19 +257,17 @@ namespace QM
 				{
 					string txt;
 					bool bold, auto, disable;
-					
-					txt = IdentifyFlags(item.Data.Txt, out bold, out auto, out disable);	// Identisy and remove flag chars
-					
-					#warning COMPLETARE auto
 
-					if((!item.IsLeaf) && ! txt.EndsWith(cfg.SubMenuStr))
+					txt = IdentifyFlags(item.Data.Txt,out bold,out auto,out disable);   // Identisy and remove flag chars
+
+					if((!item.IsLeaf) && !txt.EndsWith(cfg.SubMenuStr))
 						txt += cfg.SubMenuStr;
 					item.Data.Tsmi = new ToolStripMenuItem(txt,null);
 					item.Data.Tsmi.TextAlign = ContentAlignment.MiddleLeft;
 					item.Data.Tsmi.Name = $"{item.Data.ID.ToString($"D{IDLEN}")}";
 					item.Data.Tsmi.BackColor = Color.FromName(cfg.COL_bkgnd);
-					
-					if(item.Previous != null)							// Disable, if father node is disabled
+
+					if(item.Previous != null)                           // Disable, if father node is disabled
 					{
 						if(item.Previous.Data.Disabled)
 						{
@@ -200,7 +279,7 @@ namespace QM
 					{
 						item.Data.Disabled = true;
 					}
-										
+
 					if(bold)
 					{
 						item.Data.Tsmi.Font = mnuFontBold;
@@ -210,14 +289,14 @@ namespace QM
 						item.Data.Tsmi.Font = mnuFont;
 					}
 
-					if(item.Data.Command.Length > 1)					// Add command handler
+					if(item.Data.Command.Length > 1)                    // Add command handler
 					{
 						item.Data.Tsmi.Click += TsmiOnClick;
 						comandi[iM][item.Data.ID] = item.Data.Command;
 
 						if(auto)
 						{
-							commAuto.Add(item.Data.Command);	
+							commAuto.Add(item.Data.Command);
 						}
 					}
 					else if((!isFirstEmptySet) && (!item.IsRoot))       // Add change menu handler (first item, not root)
@@ -228,7 +307,7 @@ namespace QM
 						isFirstEmptySet = true;
 					}
 
-					if(!item.Data.Disabled)								// Add to menu, if not disabled
+					if(!item.Data.Disabled)                             // Add to menu, if not disabled
 					{
 						if(item.Depth == 1)
 						{
@@ -259,20 +338,23 @@ namespace QM
 		/// <param name="_auto"></param>
 		/// <param name="_disable"></param>
 		/// <returns>line w/out cfg chars</returns>
-		string IdentifyFlags(string line, out bool _bold, out bool _auto, out bool _disable)
+		string IdentifyFlags(string line,out bool _bold,out bool _auto,out bool _disable)
 		{
-			string _prefix = cfg.BoldChar + cfg.AutoChar + cfg.DisabledChar;	// Prefix
+			string _prefix = cfg.BoldChar + cfg.AutoChar + cfg.DisabledChar;    // Prefix
 			string txt = line;
-			_bold = _auto= _disable = false;
+			_bold = _auto = _disable = false;
 
 			if(txt.Length > 0)
 			{
 				char ch;
-				for(ch = txt[0]; _prefix.Contains(ch); ch = txt[0])
+				for(ch = txt[0];_prefix.Contains(ch);ch = txt[0])
 				{
-					if(ch == cfg.BoldChar[0])		_bold = true;
-					if(ch == cfg.AutoChar[0])		_auto = true;
-					if(ch == cfg.DisabledChar[0])	_disable = true;
+					if(ch == cfg.BoldChar[0])
+						_bold = true;
+					if(ch == cfg.AutoChar[0])
+						_auto = true;
+					if(ch == cfg.DisabledChar[0])
+						_disable = true;
 					txt = txt.Substring(1);
 				}
 			}
@@ -314,9 +396,12 @@ namespace QM
 								bool ok = true;
 								if(cfg.Verbose)
 								{
-									if(NcMessageBox.Show(this,comandi[iMenu][id],"Execute ?",MessageBoxButtons.YesNo) != DialogResult.Yes)
+									if(comandi[iMenu][id] != null)
 									{
-										ok = false;
+										if(NcMessageBox.Show(this,comandi[iMenu][id],"Execute ?",MessageBoxButtons.YesNo) != DialogResult.Yes)
+										{
+											ok = false;
+										}
 									}
 								}
 								if(ok)
@@ -546,7 +631,7 @@ namespace QM
 		/// <param name="asm"></param>
 		/// <param name="details"></param>
 		/// <returns></returns>
-		public override string Version(Assembly asm, bool details = false)
+		public override string Version(Assembly asm,bool details = false)
 		{
 			StringBuilder strb = new StringBuilder();
 			try
@@ -555,25 +640,41 @@ namespace QM
 				if(asm != null)
 				{
 					System.Version? v = asm.GetName().Version;
-					if(v != null) strb.AppendLine($"Version: {v.ToString()} ({BuildTime(asm)})");
+					if(v != null)
+						strb.AppendLine($"Version: {v.ToString()} ({BuildTime(asm)})");
 					if(details)
 					{
 						string? n = asm.GetName().Name;
-						if(n != null) strb.AppendLine("Assembly name: " + n);
-						strb.AppendLine("BuildTime time: "+ File.GetCreationTime(asm.Location).ToString());
+						if(n != null)
+							strb.AppendLine("Assembly name: " + n);
+						strb.AppendLine("BuildTime time: " + File.GetCreationTime(asm.Location).ToString());
 						strb.AppendLine("BuildTime number: " + BuildTime(asm,true));
 						strb.AppendLine("Executable path: " + Application.ExecutablePath);
 					}
 				}
 				strb.AppendLine("Copyright: " + Application.CompanyName);
 			}
-			catch	{}
+			catch { }
 			return strb.ToString();
 		}
 
 		protected override void OnHelp()
 		{
 			MessageBox.Show(Version(Assembly.GetExecutingAssembly(),true));
+		}
+
+		protected override bool OnClosingCancelEvent()
+		{
+			bool cancel = false;
+			if(MessageBox.Show("Quit","Quit ?",MessageBoxButtons.YesNo) != DialogResult.Yes)
+			{
+				cancel = true;			// La risposta a Quit ? non è yes: continua l'esecuzione
+			}
+			else
+			{							// Quit: ferma il timer. Non serve eseguire Dispose()
+				tmAuto.Stop();
+			}
+			return cancel;
 		}
 	}
 }

@@ -35,8 +35,7 @@ namespace QM
 		public string COL_status;
 		public string COL_buttons;
 		
-		
-		public string AutoFile;
+		public int AutoFirstDelay;
 		public int AutoDelay;
 
 	}

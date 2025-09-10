@@ -38,7 +38,7 @@
 			menu.LayoutStyle = ToolStripLayoutStyle.VerticalStackWithOverflow;
 			menu.Location = new Point(9,25);
 			menu.Name = "menu";
-			menu.Size = new Size(30,206);
+			menu.Size = new Size(126,25);
 			menu.TabIndex = 3;
 			menu.Text = "menuStrip1";
 			// 
@@ -46,7 +46,7 @@
 			// 
 			AutoScaleDimensions = new SizeF(7F,15F);
 			AutoScaleMode = AutoScaleMode.Font;
-			ClientSize = new Size(110,257);
+			ClientSize = new Size(199,284);
 			Controls.Add(menu);
 			Icon = (Icon)resources.GetObject("$this.Icon");
 			MainMenuStrip = menu;
