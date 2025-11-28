@@ -14,6 +14,7 @@ namespace QM
         public readonly static string _cfgFile = "QM.cfg";
         static CFG? cfg;
         static NcSplashScreen sps;
+		static Mutex? mtxInstance;
 
         /// <summary>
         ///  The main entry point for the application.
@@ -22,13 +23,21 @@ namespace QM
         static void Main()
         {
             Image? logo = null;
+			bool created;
+			mtxInstance = new Mutex(true,"QMUniqueApplication",out created);
+
+			if(!created)
+				{
+				MessageBox.Show("Istanza già attiva");
+				return;
+				}
 
             ApplicationConfiguration.Initialize();
             
             string[] resmanes = Assembly.GetExecutingAssembly().GetManifestResourceNames();
 
             // ERRORE: NON RICONOSCE OGGETTI BITMAP IN FILE RESX
-            //ResourceManager rm = new ResourceManager("QM.Resource1", Assembly.GetExecutingAssembly());
+            // ResourceManager rm = new ResourceManager("QM.Resource1", Assembly.GetExecutingAssembly());
 
             //object? obj = rm.GetObject("logo03"); 
             //if(obj != null)
@@ -37,9 +46,9 @@ namespace QM
             //}
             //Bitmap xxx = (Bitmap)Resource1.logo03;
             //logo = xxx;
+			//logo = Image.FromFile("Resources\\logo03.png");
+
             logo = (Bitmap)Resource1.logo03;
-            //logo = Image.FromFile("Resources\\logo03.png");
-                       
             
             sps = new NcSplashScreen(new Size(200,100),50,logo,true,2500,false);
             //sps.Show();
